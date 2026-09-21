@@ -1,0 +1,79 @@
+Spike do ADR 0005: reserva de leito com o legado ainda no circuito
+Grupo 09, caso Saude, envelope C
+
+CENARIO 1: duas unidades pedem o mesmo leito ao mesmo tempo
+[t001] UPA-LESTE pede HRC-201 para ANA tendo lido a versao 0
+[t002] BANCO     intencao em HRC-201 para ANA, versao 1
+[t003] LEGADO    reservar HRC-201 aceito para 70000000001
+[t004] BANCO     HRC-201 reservado para ANA
+[t005] UPA-LESTE recebeu HRC-201 confirmado para ANA
+[t006] UBS-NORTE pede HRC-201 para BRUNO tendo lido a versao 0
+[t007] BANCO     conflito em HRC-201: esperava versao 0, atual 2
+[t008] UBS-NORTE recebeu recusa por conflito, sem segunda intencao
+  invariante verificado: nenhum leito com dois pacientes
+
+CENARIO 2: o terminal antigo reserva antes da nossa confirmacao
+[t001] TERMINAL  reservou HRC-202 para CARLA por fora do nosso sistema
+[t002] UPA-LESTE pede HRC-202 para ANA tendo lido a versao 0
+[t003] BANCO     intencao em HRC-202 para ANA, versao 1
+[t004] LEGADO    reservar HRC-202 recusado, ja ocupado por 70000000003
+[t005] BANCO     intencao de ANA em HRC-202 desfeita: o legado ja deu o leito a CARLA
+[t006] UPA-LESTE recebeu recusa: o leito foi ocupado pela regulacao legada
+  invariante verificado: nenhum leito com dois pacientes
+
+CENARIO 3: tempo limite depois de o legado aplicar a reserva
+[t001] UPA-LESTE pede HRC-203 para ANA tendo lido a versao 0
+[t002] BANCO     intencao em HRC-203 para ANA, versao 1
+[t003] LEGADO    reservar HRC-203 foi aplicado, mas a resposta se perdeu
+[t004] FACHADA   tempo limite, reconciliando por leitura de volta
+[t005] LEGADO    consultar HRC-203 devolve SIT=O PAC=70000000001 OBS=UPA-LESTE203
+[t006] FACHADA   a chamada tinha sido aplicada, nao repete
+[t007] BANCO     HRC-203 reservado para ANA
+[t008] UPA-LESTE recebeu HRC-203 confirmado para ANA
+  invariante verificado: nenhum leito com dois pacientes
+
+CENARIO 4: tempo limite antes de o legado aplicar a reserva
+[t001] UPA-SUL   pede HRC-204 para DIEGO tendo lido a versao 0
+[t002] BANCO     intencao em HRC-204 para DIEGO, versao 1
+[t003] LEGADO    reservar HRC-204 nao respondeu, nada foi aplicado
+[t004] FACHADA   tempo limite, reconciliando por leitura de volta
+[t005] LEGADO    consultar HRC-204 devolve SIT=L PAC= OBS=
+[t006] FACHADA   nada foi aplicado, repetindo com a mesma chave
+[t007] LEGADO    reservar HRC-204 aceito para 70000000004
+[t008] BANCO     HRC-204 reservado para DIEGO
+[t009] UPA-SUL   recebeu HRC-204 confirmado para DIEGO
+  invariante verificado: nenhum leito com dois pacientes
+
+CENARIO 5: legado fora do ar, o disjuntor abre e a unidade recebe recusa
+[t001] UPA-LESTE pede HRC-205 para ANA tendo lido a versao 0
+[t002] BANCO     intencao em HRC-205 para ANA, versao 1
+[t003] LEGADO    reservar HRC-205 nao respondeu
+[t004] FACHADA   tempo limite, reconciliando por leitura de volta
+[t005] LEGADO    consultar HRC-205 nao respondeu
+[t006] FACHADA   a leitura de volta tambem falhou, estado indefinido
+[t007] BANCO     HRC-205 fica indefinido e vai para conferencia humana
+[t008] UPA-LESTE recebeu aviso de que a confirmacao esta pendente
+[t009] UPA-LESTE pede HRC-206 para BRUNO tendo lido a versao 0
+[t010] BANCO     intencao em HRC-206 para BRUNO, versao 1
+[t011] LEGADO    reservar HRC-206 nao respondeu
+[t012] FACHADA   tempo limite, reconciliando por leitura de volta
+[t013] LEGADO    consultar HRC-206 nao respondeu
+[t014] FACHADA   a leitura de volta tambem falhou, estado indefinido
+[t015] BANCO     HRC-206 fica indefinido e vai para conferencia humana
+[t016] UPA-LESTE recebeu aviso de que a confirmacao esta pendente
+[t017] UPA-LESTE pede HRC-207 para CARLA tendo lido a versao 0
+[t018] BANCO     intencao em HRC-207 para CARLA, versao 1
+[t019] LEGADO    reservar HRC-207 nao respondeu
+[t020] FACHADA   tempo limite, reconciliando por leitura de volta
+[t021] LEGADO    consultar HRC-207 nao respondeu
+[t022] FACHADA   a leitura de volta tambem falhou, estado indefinido
+[t023] BANCO     HRC-207 fica indefinido e vai para conferencia humana
+[t024] UPA-LESTE recebeu aviso de que a confirmacao esta pendente
+[t025] UPA-LESTE pede HRC-208 para DIEGO tendo lido a versao 0
+[t026] BANCO     intencao em HRC-208 para DIEGO, versao 1
+[t027] FACHADA   disjuntor aberto, recusando sem chamar o legado
+[t028] BANCO     intencao de DIEGO em HRC-208 desfeita: regulacao indisponivel
+[t029] UPA-LESTE recebeu recusa explicita: use a contingencia
+  invariante verificado: nenhum leito com dois pacientes
+
+RESUMO: 5 de 5 cenarios com o invariante mantido
