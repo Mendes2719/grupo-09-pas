@@ -1,0 +1,41 @@
+flowchart TB
+    paciente["<b>Paciente e família</b><br/><i>pessoa</i>"]
+    profissional["<b>Profissional da rede</b><br/><i>pessoa</i>"]
+    subgraph rede["Rede Municipal de Saúde (fronteira do sistema)"]
+        direction TB
+        portal["<b>Portal do cidadão</b><br/>[aplicação web]<br/>Agendamento e consulta<br/>pelo próprio cidadão"]
+        appunidade["<b>Aplicação da unidade</b><br/>[aplicação web]<br/>Tela da equipe nas 70 UBS<br/>e no hospital"]
+        noupa["<b>Nó Local da UPA</b><br/>[em camadas, uma instância por UPA]<br/>Triagem e atendimento<br/>que funcionam sem rede"]
+        nucleo["<b>Núcleo da Rede</b><br/>[monolito modular]<br/>Cadastro e prontuário, regulação,<br/>farmácia, vigilância e agendamento"]
+        bancoupa[("<b>Banco Local da UPA</b><br/>[PostgreSQL]<br/>Atendimentos e tabela de saída")]
+        bancorede[("<b>Banco da Rede</b><br/>[PostgreSQL]<br/>Um esquema por módulo")]
+        barramento[["<b>Barramento de eventos</b><br/>[corretor no data center municipal]"]]
+        fachada["<b>Fachada de integração</b><br/>[gateway com camada anticorrupção]<br/>Único ponto de conversa externa"]
+    end
+    legado["<b>Regulação legada</b><br/><i>sistema externo</i>"]
+    federal["<b>Sistemas federais</b><br/><i>sistema externo</i>"]
+    paciente -->|"Usa [HTTPS]"| portal
+    profissional -->|"Usa [HTTPS]"| appunidade
+    profissional -->|"Usa na UPA<br/>[HTTPS na rede local]"| noupa
+    portal -->|"Chama [HTTPS]"| nucleo
+    appunidade -->|"Chama [HTTPS]"| nucleo
+    noupa -->|"Lê e grava [SQL]"| bancoupa
+    nucleo -->|"Lê e grava [SQL]"| bancorede
+    noupa -->|"Publica o acumulado quando<br/>a rede volta [AMQP]"| barramento
+    nucleo -->|"Publica e consome [AMQP]"| barramento
+    nucleo -->|"Chama [HTTPS]"| fachada
+    fachada -->|"Consulta e confirma<br/>reserva [HTTPS]"| legado
+    fachada -->|"Envia notificação [HTTPS]"| federal
+    style rede fill:#ffffff,stroke:#444444,stroke-dasharray: 6 4
+    style paciente fill:#ffffff,stroke:#444444
+    style profissional fill:#ffffff,stroke:#444444
+    style legado fill:#e8e8e8,stroke:#777777
+    style federal fill:#e8e8e8,stroke:#777777
+    style portal fill:#cfe2f3,stroke:#1f4e79
+    style appunidade fill:#cfe2f3,stroke:#1f4e79
+    style noupa fill:#cfe2f3,stroke:#1f4e79
+    style nucleo fill:#cfe2f3,stroke:#1f4e79
+    style fachada fill:#cfe2f3,stroke:#1f4e79
+    style barramento fill:#cfe2f3,stroke:#1f4e79
+    style bancoupa fill:#cfe2f3,stroke:#1f4e79
+    style bancorede fill:#cfe2f3,stroke:#1f4e79

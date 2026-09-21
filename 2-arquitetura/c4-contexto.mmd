@@ -1,0 +1,18 @@
+flowchart TB
+    paciente["<b>Paciente e família</b><br/><i>pessoa</i><br/>Agenda consulta e vacina e acompanha<br/>o próprio atendimento"]
+    profissional["<b>Profissional da rede</b><br/><i>pessoa</i><br/>Tria, atende, solicita leito<br/>e dispensa medicamento"]
+    gestao["<b>Vigilância e gestão</b><br/><i>pessoa</i><br/>Acompanha notificação compulsória<br/>e indicadores da rede"]
+    rede["<b>Rede Municipal de Saúde</b><br/>Unifica prontuário, regulação, farmácia,<br/>vigilância e agendamento das 76 unidades"]
+    legado["<b>Regulação legada</b><br/><i>sistema externo</i><br/>Reserva os leitos hoje.<br/>API antiga e pouco documentada"]
+    federal["<b>Sistemas federais de saúde</b><br/><i>sistema externo</i><br/>Recebem notificação compulsória.<br/>Janelas de indisponibilidade"]
+    paciente -->|"Agenda e consulta<br/>[HTTPS]"| rede
+    profissional -->|"Registra atendimento<br/>e solicita leito [HTTPS]"| rede
+    gestao -->|"Consulta relatórios<br/>e alertas [HTTPS]"| rede
+    rede -->|"Consulta e confirma<br/>reserva [HTTPS]"| legado
+    rede -->|"Envia notificação<br/>e recebe retorno [HTTPS]"| federal
+    style rede fill:#cfe2f3,stroke:#1f4e79,stroke-width:2px
+    style paciente fill:#ffffff,stroke:#444444
+    style profissional fill:#ffffff,stroke:#444444
+    style gestao fill:#ffffff,stroke:#444444
+    style legado fill:#e8e8e8,stroke:#777777
+    style federal fill:#e8e8e8,stroke:#777777

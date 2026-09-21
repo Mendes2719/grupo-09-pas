@@ -1,0 +1,30 @@
+flowchart TB
+    appunidade["Aplicação da unidade"]
+    subgraph nucleo["Núcleo da Rede (unidade de implantação)"]
+        entrada["Adaptador web<br/>porta de entrada dos casos de uso"]
+        prontuario["Cadastro e prontuário<br/>identidade do paciente e trilha de alterações"]
+        regulacao["Regulação de leitos<br/>intenção, confirmação e transporte"]
+        farmacia["Farmácia e estoque<br/>dispensação, lote e validade"]
+        vigilancia["Vigilância<br/>notificação compulsória e agregação"]
+        agendamento["Agendamento<br/>consulta, vacina e campanha"]
+        projetor["Projetor de leitura<br/>monta as visões de vigilância e agendamento"]
+        outbox["Publicador de eventos<br/>lê a tabela de saída e publica"]
+    end
+    banco[("Banco da Rede")]
+    barramento["Barramento de eventos"]
+    fachada["Fachada de integração"]
+    appunidade -->|"chamada de procedimento remota"| entrada
+    entrada -->|"chamada de procedimento"| prontuario
+    entrada -->|"chamada de procedimento"| regulacao
+    entrada -->|"chamada de procedimento"| farmacia
+    entrada -->|"chamada de procedimento"| agendamento
+    regulacao -->|"adaptador"| fachada
+    vigilancia -->|"adaptador"| fachada
+    prontuario -->|"acesso a dado compartilhado"| banco
+    regulacao -->|"acesso a dado compartilhado"| banco
+    outbox -->|"acesso a dado compartilhado"| banco
+    outbox -->|"evento"| barramento
+    barramento -->|"evento"| vigilancia
+    barramento -->|"evento"| projetor
+    projetor -->|"fluxo de dados"| banco
+    style nucleo fill:#ffffff,stroke:#444444,stroke-dasharray: 6 4

@@ -1,0 +1,37 @@
+# Mapa de restrições e decisões
+
+Faz parte da [Entrega 2](documento-de-arquitetura.md). Cada linha liga uma restrição do envelope ou um requisito que aperta do caso à decisão que o atende e ao ADR que a registra. Nenhuma restrição fica sem decisão e nenhuma decisão aparece sem a restrição que a obriga.
+
+## 1. Restrições do Envelope C
+
+| Restrição do envelope | O que ela impede ou obriga | Decisão que a atende | ADR |
+| --- | --- | --- | --- |
+| Servidores próprios, sem nuvem pública, por exigência legal, com os dados no data center municipal | elimina qualquer estilo cujo mecanismo dependa de plataforma gerenciada de nuvem, e obriga a equipe a operar o que escolher | Núcleo da Rede em uma unidade de implantação no data center municipal, com barramento de eventos instalado localmente. Serverless foi descartado ainda na matriz, porque a seção 12.1 define o estilo pela cobrança por execução, que aqui não existe | [0001](adr-0001-adotar-monolito-modular-com-no-local-na-upa.md), [0004](adr-0004-operar-em-servidores-proprios-com-implantacao-em-ondas.md) |
+| Dez desenvolvedores e duas pessoas de infraestrutura | elimina estilos cujo custo fixo cresce com o número de unidades implantadas e de painéis a observar | Duas famílias de unidade de implantação apenas, o núcleo e o nó da UPA. A seção 6.5 indica o monolito modular justamente quando a organização não tem observabilidade distribuída nem entrega contínua de dezenas de artefatos | [0001](adr-0001-adotar-monolito-modular-com-no-local-na-upa.md), [0004](adr-0004-operar-em-servidores-proprios-com-implantacao-em-ondas.md) |
+| Orçamento anual fixo, e não por consumo | penaliza os estilos de custo operacional alto na Tabela A.2 e favorece os de custo baixo | Estilos de custo baixo no centro, monolito modular e hexagonal. O único estilo de custo alto que aceitamos é a arquitetura orientada a eventos, e só porque a UPA offline não tem outra solução | [0001](adr-0001-adotar-monolito-modular-com-no-local-na-upa.md) |
+| O legado de regulação não pode ser desligado e expõe uma API antiga e pouco documentada | impede que o nosso banco seja a autoridade da ocupação do leito enquanto o terminal antigo continuar reservando | Fachada de integração como único ponto de conversa, com camada anticorrupção traduzindo nas duas direções, e a confirmação da reserva sempre no legado | [0003](adr-0003-falar-com-legado-e-federais-por-fachada.md), [0005](adr-0005-reservar-leito-com-confirmacao-no-legado.md) |
+| Substituir o legado aos poucos, com pouca gente e sem nuvem, no prazo de dois anos | impede reescrita de uma vez e obriga a manter o serviço no ar durante toda a transição | Estrangulamento com fachada de roteamento, migração por capacidade de negócio na ordem consulta, transporte e reserva, com abstração intermediária e execução em paralelo na reserva | [0003](adr-0003-falar-com-legado-e-federais-por-fachada.md), [0004](adr-0004-operar-em-servidores-proprios-com-implantacao-em-ondas.md) |
+
+## 2. Requisitos que apertam, por subdomínio do caso
+
+| Subdomínio | Requisito que aperta | Decisão que o atende | ADR |
+| --- | --- | --- | --- |
+| Triagem e atendimento na UPA | funcionar com a internet fora do ar e sincronizar depois sem perder nem duplicar | Nó local da UPA como unidade de implantação separada, em camadas por dentro, com tabela de saída na mesma transação do atendimento e consumidor idempotente no núcleo, com chave formada por unidade, número local e versão | [0001](adr-0001-adotar-monolito-modular-com-no-local-na-upa.md) |
+| Prontuário eletrônico | saber quem viu e quem alterou cada registro, com retenção de 20 anos | Trilha de alterações somente acréscimo para quem alterou, trilha de acesso separada para quem viu, dado pessoal fora da obrigação legal mantido fora do fluxo imutável | [0002](adr-0002-registrar-prontuario-como-trilha-somente-acrescimo.md) |
+| Regulação de leitos e transporte | nunca reservar o mesmo leito duas vezes, com o legado continuando ativo | Concorrência otimista por versão de leito dentro do núcleo, intenção de reserva confirmada no legado por chave determinística, e reconciliação por leitura de volta quando a chamada dá tempo limite | [0005](adr-0005-reservar-leito-com-confirmacao-no-legado.md) |
+| Farmácia e estoque | dispensação só com receita válida e rastreio de lote | Módulo de farmácia no mesmo artefato do prontuário, com a validação da receita em transação local, sem evento no caminho. A seção 11.6 recusa evento quando é preciso resposta imediata e consistência forte | [0001](adr-0001-adotar-monolito-modular-com-no-local-na-upa.md), [0002](adr-0002-registrar-prontuario-como-trilha-somente-acrescimo.md) |
+| Vigilância epidemiológica | notificar em 24 horas e emitir relatórios por bairro e período | Notificação gravada na tabela de saída junto com o atendimento, prazo contado sobre o registro local, envio ao federal assíncrono e protegido, e relatórios montados por pipeline de filtros sobre o mesmo fluxo | [0003](adr-0003-falar-com-legado-e-federais-por-fachada.md), [0006](adr-0006-acionar-triagem-e-notificacao-por-plugins.md) |
+| Agendamento e cidadão | aguentar campanha com pico de 20 vezes sem derrubar o atendimento | Modelo de leitura separado para o agendamento, alimentado por evento, e o barramento usado como amortecedor do pico. Serverless foi descartado para esse pico porque sem cobrança por execução o estilo só acrescentaria uma plataforma a operar | [0002](adr-0002-registrar-prontuario-como-trilha-somente-acrescimo.md), [0004](adr-0004-operar-em-servidores-proprios-com-implantacao-em-ondas.md) |
+| Integração federal e legado | não travar a unidade quando o sistema externo cair | Toda saída pela fachada de integração, com tempo limite, retentativa com recuo exponencial, disjuntor, anteparo e limitação de taxa, na ordem da seção 18.4 | [0003](adr-0003-falar-com-legado-e-federais-por-fachada.md) |
+
+## 3. Restrições que a arquitetura se impõe
+
+Estas não vêm do enunciado. São regras que assumimos e que passam a valer como critério de aceitação, verificadas no mesmo pipeline dos testes, conforme a seção 19.6.
+
+| Regra | Por que ela existe | Como é verificada |
+| --- | --- | --- |
+| Nenhum módulo importa o interno de outro módulo | a seção 6.6 chama fronteira sem verificação de fronteira ficcional, e o erro mais comum do estilo é chamar de monolito modular um monolito em camadas com pastas renomeadas | função de aptidão de dependência no pipeline, violação tratada como defeito |
+| Nenhum componente fala com o legado ou com um federal fora da fachada de integração | é a regra que torna possível o estrangulamento, porque a tabela de roteamento só funciona se todo o tráfego passar por ela | função de aptidão que quebra a construção se houver importação de pacote do legado fora da camada anticorrupção |
+| Nenhuma reserva de leito é confirmada ao usuário antes da resposta do legado | enquanto o legado for a autoridade da ocupação, confirmar antes é criar dupla reserva | cenário do código pequeno da [Entrega 3](../3-spike/), que falha se o invariante for violado |
+| Todo consumidor de evento é idempotente | a Tabela 3.1 define a entrega por evento como ao menos uma vez, então repetição não é exceção, é o caso normal | teste de repetição do mesmo evento em cada consumidor |
+| Toda estrutura de transição nasce com data de remoção | a seção 19.4 aplica essa regra às chaves de funcionalidade e à camada anticorrupção, porque cada chave é uma bifurcação a mais no espaço de teste | revisão trimestral da tabela de roteamento e das chaves ativas |
