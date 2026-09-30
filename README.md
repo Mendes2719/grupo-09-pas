@@ -27,7 +27,7 @@ Repositório da atividade "Um problema, cinco realidades", da disciplina 12462, 
 | [`1-matriz/`](1-matriz/) | Entrega 1, matriz dos doze estilos aplicada ao nosso caso e envelope, com os estilos descartados e o motivo | Entregue |
 | [`2-arquitetura/`](2-arquitetura/) | Entrega 2, documento de arquitetura com os três níveis de C4, o mapa de restrições e decisões e os seis ADRs | Entregue |
 | [`3-spike/`](3-spike/) | Entrega 3, o código pequeno que prova o ADR 0005, a decisão mais arriscada | Entregue |
-| `4-leitura-cruzada/` | Entrega 4, objeções enviadas ao Grupo 04 e respostas às objeções recebidas do Grupo 01 | Pendente |
+| [`4-leitura-cruzada/`](4-leitura-cruzada/) | Entrega 4, objeções enviadas ao Grupo 04 e respostas às objeções recebidas do Grupo 01 | Objeções enviadas; respostas pendentes |
 | `5-final/` | Entrega 5, versão revisada e o CHANGELOG do que mudou depois da leitura cruzada | Pendente |
 
 Na leitura cruzada revisamos o Grupo 04, que tem o mesmo caso com o Envelope D, e somos revisados pelo Grupo 01, que tem o mesmo caso com o Envelope B.
